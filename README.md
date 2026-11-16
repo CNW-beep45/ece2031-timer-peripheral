@@ -56,3 +56,4 @@ These files go on top of the Lab 8 SCOMP  project.
 ### Notes
  
 - Only `timer_peripheral` needs a block in the BDF. The channel and prescaler are used inside it.
+- timescale start as 1 as 1 ms so 1 sec would be 1000 as the timescale input
