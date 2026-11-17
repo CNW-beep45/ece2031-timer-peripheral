@@ -1,5 +1,5 @@
 ORG 0 
-Start:
+Restart:
   LOADI 0 
   OUT   Hex0
   OUT   Hex1
@@ -7,7 +7,7 @@ Start:
 StartWait:
   IN    Switches
   AND   One 
-  JZERO StartTimers
+  JPOS StartTimers
   JUMP  StartWait
 
 StartTimers: 
@@ -23,9 +23,9 @@ StartTimers:
   OUT   Command1
 
 StopWhenT2Hits10:
-  IN    Elap0
+  IN    ConElap0
   OUT   Hex0
-  IN    Elap1
+  IN    ConElap1
   OUT   Hex1
   SUB   Ten
   JZERO StopTimers
@@ -34,8 +34,12 @@ StopWhenT2Hits10:
 StopTimers:
   LOAD  Stop
   OUT   Command0
-  OUT   Command1
-  JUMP  EndLoop:
+  OUT   Command1    
+  IN    ConElap0
+  OUT   Hex0
+  IN    ConElap1
+  OUT   Hex1
+  JUMP  EndLoop
 
 EndLoop:
   JUMP  EndLoop
