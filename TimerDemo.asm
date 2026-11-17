@@ -1,55 +1,84 @@
-; Timer peripheral test: one-shot mode on timer 0
-; Turn on switch 0 to start a 5 second one-shot timer. The hex display shows
-; ELAPSED (1, 2, 3, 4, 5), then the program stops when the timer expires.
-; Press KEY0 to reset and run it again.
-
-ORG 0
-
+ORG 0 
 Start:
-	LOADI  0010            ; debug: show 0 on the hex display at start
-	OUT    Hex0
-	LOADI  2            ; mode 10 = one-shot
-	OUT    T0_Config
-	LOADI  10            ; expire after 5 ticks
-	OUT    T0_Duration
-	LOADI  100         ; 1000 ms per tick, so one tick = 1 second
-	OUT    T0_Timescale
+  LOADI 0 
+  OUT   Hex0
+  OUT   Hex1
 
-WaitSwitch:
-	IN     Switches     ; wait here until switch 0 is turned on
-	AND    Bit0
-	JZERO  WaitSwitch
+StartWait:
+  IN    Switches
+  AND   One 
+  JZERO StartTimers
+  JUMP  StartWait
 
-	LOADI  0
-	OUT    Hex0
-	LOADI  3            ; RESET (timer is stopped, so it is accepted)
-	OUT    T0_Command
-	LOADI  1            ; START
-	OUT    T0_Command
+StartTimers: 
+  LOAD  OneMS
+  OUT   TimeScale0
+  LOAD  TwoMS
+  OUT   TimeScale1
+  LOAD  Config
+  OUT   ConElap0
+  OUT   ConElap1
+  LOAD  Start
+  OUT   Command0
+  OUT   Command1
 
-Wait:
-	IN     T0_Elapsed   ; show the tick count on the hex display
-	OUT    Hex0
-	IN     T0_Periods   ; becomes 1 when the one-shot expires
-	JZERO  Wait         ; not expired yet, keep polling
+StopWhenT2Hits10:
+  IN    Elap0
+  OUT   Hex0
+  IN    Elap1
+  OUT   Hex1
+  SUB   Ten
+  JZERO StopTimers
+  JUMP  StopWhenT2Hits10
 
-Done:
-	IN     T0_Elapsed   ; ELAPSED holds at DURATION (5) after expiry
-	OUT    Hex0
-	IN     T0_Periods   ; PERIODS = 1: the timer reached its duration
-	OUT    Hex1
-	JUMP   Done         ; stop here
+StopTimers:
+  LOAD  Stop
+  OUT   Command0
+  OUT   Command1
+  JUMP  EndLoop:
 
-; Useful values
-Bit0:          DW &B0000000001
+EndLoop:
+  JUMP  EndLoop
 
-; I/O addresses
-Switches:      EQU &H000
-Hex0:          EQU &H004
-Hex1:          EQU &H005
-T0_Config:     EQU &H070    ; write: mode      read: ELAPSED
-T0_Elapsed:    EQU &H070
-T0_Duration:   EQU &H071    ; write: duration  read: PERIODS
-T0_Periods:    EQU &H071
-T0_Timescale:  EQU &H072
-T0_Command:    EQU &H073
+; Useful constants
+Config:     DW  1 
+OneMS:      DW  1000 
+TwoMS:      DW  2000 
+Start:      DW  1
+Stop:       DW  2 
+Reset:      DW  3 
+One:        DW  1
+Ten:        DW  10
+
+
+
+; IO address constants
+Switches:   EQU 000 
+LEDs:       EQU 001 
+Hex0:       EQU 004 
+Hex1:       EQU 005
+
+; Timer 1 
+ConElap0:    EQU &H70
+DurComp0:    EQU &H71 
+TimeScale0:  EQU &H72
+Command0:    EQU &H73
+
+; Timer 2 
+ConElap1:    EQU &H74 
+DurComp1:    EQU &H75 
+TimeScale1:  EQU &H76 
+Command1:    EQU &H77 
+
+; Timer 3 
+ConElap2:    EQU &H78 
+DurComp2:    EQU &H79 
+TimeScale2:  EQU &H7A 
+Command2:    EQU &H7B 
+
+; Timer 4
+ConElap3:    EQU &H7C 
+DurComp3:    EQU &H7D 
+TimeScale3:  EQU &H7E 
+Command3:    EQU &H7F 
+
