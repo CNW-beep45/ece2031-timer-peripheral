@@ -1,0 +1,144 @@
+WIDTH=16;
+DEPTH=2048;
+
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+0000: 1800; -- 	LOADI  0
+0001: 9801; -- 	OUT    LEDs
+0002: 9804; -- 	OUT    Hex0
+0003: 9805; -- 	OUT    Hex1
+0004: 1802; -- 	LOADI  ModeOneShot
+0005: 9870; -- 	OUT    T0_Config
+0006: 1BE8; -- 	LOADI  MsPerSecond
+0007: 9872; -- 	OUT    T0_Timescale
+0008: 1803; -- 	LOADI  ModePeriodic
+0009: 9874; -- 	OUT    T1_Config
+000A: 1801; -- 	LOADI  1
+000B: 9876; -- 	OUT    T1_Timescale
+000C: 18FA; -- 	LOADI  250
+000D: 9875; -- 	OUT    T1_Duration
+000E: 1803; -- 	LOADI  ModePeriodic
+000F: 9878; -- 	OUT    T2_Config
+0010: 1801; -- 	LOADI  1
+0011: 987A; -- 	OUT    T2_Timescale
+0012: 1BE8; -- 	LOADI  1000
+0013: 9879; -- 	OUT    T2_Duration
+0014: 1801; -- 	LOADI  ModeStopwatch
+0015: 987C; -- 	OUT    T3_Config
+0016: 1BE8; -- 	LOADI  MsPerSecond
+0017: 987E; -- 	OUT    T3_Timescale
+0018: 9000; -- 	IN     Switches
+0019: 387D; -- 	AND    Bit9
+001A: 7818; -- 	JNZ    WaitOff
+001B: 9000; -- 	IN     Switches
+001C: 387D; -- 	AND    Bit9
+001D: 701B; -- 	JZERO  WaitOn
+001E: 1803; -- 	LOADI  CmdReset      
+001F: 9873; -- 	OUT    T0_Command
+0020: 9877; -- 	OUT    T1_Command
+0021: 987B; -- 	OUT    T2_Command
+0022: 987F; -- 	OUT    T3_Command
+0023: 9000; -- 	IN     Switches
+0024: 387E; -- 	AND    LowByte       ; SW7-SW0 = one-shot duration in seconds
+0025: 1078; -- 	STORE  Duration
+0026: 9871; -- 	OUT    T0_Duration   ; 0 val ignored
+0027: 1801; -- 	LOADI  CmdStart
+0028: 9877; -- 	OUT    T1_Command
+0029: 987B; -- 	OUT    T2_Command
+002A: 987F; -- 	OUT    T3_Command
+002B: 0878; -- 	LOAD   Duration
+002C: 702F; -- 	JZERO  MainLoop      ; 0 duration - dont start one-shot
+002D: 1801; -- 	LOADI  CmdStart
+002E: 9873; -- 	OUT    T0_Command
+002F: 9000; -- 	IN     Switches      ; stop when SW9 turned off
+0030: 387D; -- 	AND    Bit9
+0031: 7049; -- 	JZERO  StopAll
+0032: 9075; -- 	IN     T1_Periods
+0033: 387C; -- 	AND    Bit0
+0034: 1079; -- 	STORE  LedVal
+0035: 9079; -- 	IN     T2_Periods
+0036: 387C; -- 	AND    Bit0
+0037: 5002; -- 	SHIFT  2
+0038: 4079; -- 	OR     LedVal
+0039: 1079; -- 	STORE  LedVal
+003A: 9071; -- 	IN     T0_Periods
+003B: 783E; -- 	JNZ    OneShotDone
+003C: 0878; -- 	LOAD   Duration
+003D: 7841; -- 	JNZ    ShowLeds
+003E: 0879; -- 	LOAD   LedVal
+003F: 407D; -- 	OR     Bit9
+0040: 1079; -- 	STORE  LedVal
+0041: 0879; -- 	LOAD   LedVal
+0042: 9801; -- 	OUT    LEDs
+0043: 9070; -- 	IN     T0_Elapsed
+0044: 9805; -- 	OUT    Hex1
+0045: 907C; -- 	IN     T3_Elapsed
+0046: 804F; -- 	CALL   ToBCD
+0047: 9804; -- 	OUT    Hex0
+0048: 582F; -- 	JUMP   MainLoop
+0049: 1802; -- 	LOADI  CmdStop
+004A: 9873; -- 	OUT    T0_Command
+004B: 9877; -- 	OUT    T1_Command
+004C: 987B; -- 	OUT    T2_Command
+004D: 987F; -- 	OUT    T3_Command
+004E: 581B; -- 	JUMP   WaitOn
+004F: 107A; -- 	STORE  BinVal
+0050: 1800; -- 	LOADI  0
+0051: 107B; -- 	STORE  BcdVal
+0052: 087A; -- 	LOAD   BinVal        ; 10000 is unsigned wrap until val is positive
+0053: 6858; -- 	JPOS   BcdWrap
+0054: 7058; -- 	JZERO  BcdWrap
+0055: 287F; -- 	SUB    D10000
+0056: 107A; -- 	STORE  BinVal
+0057: 5852; -- 	JUMP   BcdHigh
+0058: 087A; -- 	LOAD   BinVal
+0059: 287F; -- 	SUB    D10000
+005A: 605D; -- 	JNEG   BcdThou
+005B: 107A; -- 	STORE  BinVal
+005C: 5858; -- 	JUMP   BcdWrap
+005D: 087A; -- 	LOAD   BinVal
+005E: 2880; -- 	SUB    D1000
+005F: 6065; -- 	JNEG   BcdHund
+0060: 107A; -- 	STORE  BinVal
+0061: 087B; -- 	LOAD   BcdVal
+0062: 2083; -- 	ADD    Bcd1000
+0063: 107B; -- 	STORE  BcdVal
+0064: 585D; -- 	JUMP   BcdThou
+0065: 087A; -- 	LOAD   BinVal
+0066: 2881; -- 	SUB    D100
+0067: 606D; -- 	JNEG   BcdTens
+0068: 107A; -- 	STORE  BinVal
+0069: 087B; -- 	LOAD   BcdVal
+006A: 2084; -- 	ADD    Bcd100
+006B: 107B; -- 	STORE  BcdVal
+006C: 5865; -- 	JUMP   BcdHund
+006D: 087A; -- 	LOAD   BinVal
+006E: 2882; -- 	SUB    D10
+006F: 6075; -- 	JNEG   BcdOnes
+0070: 107A; -- 	STORE  BinVal
+0071: 087B; -- 	LOAD   BcdVal
+0072: 2085; -- 	ADD    Bcd10
+0073: 107B; -- 	STORE  BcdVal
+0074: 586D; -- 	JUMP   BcdTens
+0075: 087B; -- 	LOAD   BcdVal
+0076: 207A; -- 	ADD    BinVal
+0077: 8800; -- 	RETURN
+0078: 0000; -- Duration:  DW 0          ; one-shot duration seconds
+0079: 0000; -- LedVal:    DW 0          ; LED pattern
+007A: 0000; -- BinVal:    DW 0          ; ToBCD working val
+007B: 0000; -- BcdVal:    DW 0          ; ToBCD result
+007C: 0001; -- Bit0:      DW &amp;B0000000001
+007D: 0200; -- Bit9:      DW &amp;B1000000000
+007E: 00FF; -- LowByte:   DW &amp;H00FF
+007F: 2710; -- D10000:    DW 10000
+0080: 03E8; -- D1000:     DW 1000
+0081: 0064; -- D100:      DW 100
+0082: 000A; -- D10:       DW 10
+0083: 1000; -- Bcd1000:   DW &amp;H1000
+0084: 0100; -- Bcd100:    DW &amp;H0100
+0085: 0010; -- Bcd10:     DW &amp;H0010
+[0086..07FF] : 0000; -- [empty memory]
+END;
+
